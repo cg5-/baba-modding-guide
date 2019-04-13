@@ -39,7 +39,7 @@ The width and height of the current level are stored in `roomsizex` and `roomsiz
 [Insert picture?]
 
 ## The Rule Parser and Features
-The rule parser is found in the code function in rules.lua. It is re-run at certain times during each turn [state when?], but only if text has moved since the last time it ran. The output of the rule parser is a set of features. All features have the same structure:
+The rule parser is found in the `code` function in rules.lua. It is re-run at certain times during each turn, but only if `updatecode` is 1 which usually happens because text was pushed. The output of the rule parser is a set of features. All features have the same structure:
 
 ```lua
 {baseRule, conditions, unitIds}
@@ -91,4 +91,21 @@ end
 ```
 
 ## Anatomy of a Turn
-[A section going through each step involved in a turn, and giving a brief overview of what happens in that step and in what code it happens.]
+A turn starts in `command` from syntax.lua, which is never called from any other lua code; presumably it's called directly from Multimedia Fusion. This just determines which button was pressed, and then calls `movecommand` to resolve the actual turn. You'll also notice some leftover code for a co-op mode which was never completed.
+
+`movecommand` contains all of the actual logic to resolve a turn. It starts with the infamously convoluted movement code, where most of the movement mechanics are resolved. Then it re-parses the rules if necessary. Then it resolves conversion rules (**noun is noun**). Then it re-parses rules again. Finally it calls `moveblock` which resolves the remaining mechanics. It also calls out to `MF_mapcursor` which presumably moves the cursor if it exists.
+
+In many cases, units are not updated immediately. Instead they are queued up by `addaction` in update.lua and all executed at once in `doupdate`. This helps ensure that the order in which rules are processed does not affect the outcome.
+
+### The Dreaded Movement Code
+The movement code runs in three *takes*. A take starts by determining a list of `moving_units`:
+
+* In the first take, it attempts to move all units which are **you** in the direction the players chose.
+* In the second take, it attempts to move all units which are **move**, **chill** and which **fear** other units. Chill and fear are mechanics which the vanilla game doesn't use.
+* In the third take, it attemps to move all units on a unit which **is shift** in the direction the shifter is facing.
+
+It's possible for a unit to be a `moving_unit` more than once in the same take, for example if a unit **is move and move** or **is shift and shift**. These are all combined into a single `moving_unit` record with a `moves` property greater than 1.
+
+Then it goes through all of the `moving_units` and somehow determines which movements are blocked by solid units and which units will be pushed, pulled or swapped as a result. There's also some code to make **shut** and **open** work. I don't really understand all of this [pull requests welcome 🙃]. This is done in `check`, `trypush` and `dopush`. The result is a `movelist` containing those `moving_units` which were not blocked, and all resulting pushes, pulls or swaps. These moves are actually executed by the `move` function.
+
+Each `moving_unit` will move once in a take. If some of the `moving_units` needed to move more than once, that take will have multiple "sub-takes" for the additional moves. The code calls these `finaltake`s but that name is really misleading. The `moving_units` in a sub-take are those `moving_units` which were `still_moving` at the end of the previous take or sub-take. Only once there are no more `still_moving` units does it move onto the next proper take.
