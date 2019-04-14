@@ -31,7 +31,7 @@ local ox, oy = directionVector[1], directionVector[2]
 
 Now `<ox, oy>` is a unit vector pointing in the unit’s direction, and the tile in front of the unit is at `(unit.values[XPOS] + ox, unit.values[YPOS] + oy)`.
 
-`unit.strings[UNITNAME]` - this tells you what kind of unit it is. Text objects have “text_” in front of their name. Example values are "baba", "rock", "text_baba" and "text_is". When interacting with rules, it might be helpful to use `getname(unit)` instead, which returns “text” for all text objects.
+`unit.strings[UNITNAME]` - this tells you what kind of unit it is. Text objects have "text_" in front of their name. Example values are "baba", "rock", "text_baba" and "text_is". When interacting with rules, it might be helpful to use `getname(unit)` instead, which returns "text" for all text objects.
 
 ## Coordinate System
 The width and height of the current level are stored in `roomsizex` and `roomsizey`, and coordinates range from 0 to `roomsize<x|y> - 1`. However the playable area is surrounded by a 1-tile wide frame of "edge" tiles, so the actual playable area is `roomsizex - 2` tiles wide and `roomsizey - 2` tall. The playable area ranges from `(1,1)` to `(roomsizex - 2, roomsizey - 2)`. Increasing x moves to the right and increasing y moves down.
@@ -57,14 +57,61 @@ There are always two features **text is push** and **level is stop**. These don'
 ## All, Group and Not X
 A rule with **all** in the subject, like **all is push**, will, in addition to the `{"all", "is", "push"}` feature, generate one feature for each kind of object present in the level (not including text), like **baba is push**, **rock is push** and so on. **Group** and **Not X** work similarly. These additional features do not appear in the pause menu.
 
-## Not Cancelling
+## Not Cancelling and Conversion Prevention
 If you have a feature **rock is push** and another feature **rock is not push**, `postrules` will add the special "never" condition to the first rule, effectively disabling it. If the **not** rule has a condition (e.g. **rock on tile is not push**), it is negated and added to the first rule (giving **rock not on tile is push**).
+
+Conversion prevention rules like **baba is baba** cancel out other conversion rules like **baba is keke** in the same way.
 
 ## Querying Features
 You can test if a unit has a feature (say, if it **is dance**) using `hasfeature(getname(unit), "is", "dance", unitid)`. [Also mention the featureindex, and other ways to query for features.]
 
-## the unit type structure [name pending]
-[a section explaining the structure in values.lua and what all the fields mean]
+## The Tiles List
+In values.lua there is a structure called the `tileslist` which defines the tiles which are available in the editor by default. You can add new unit types starting from `object120` so that you can place them in your levels. The simplest way to add a custom tile is to copy the most similar tile that already exists. Apparently going past `object125` or so causes problems. Here is what the fields in here mean:
+
+`name` - This is the UNITNAME of the unit. This is not just an arbitrary identifier; it actually determines how the rules system identifies the unit. Text units have names starting with "text_".
+
+`sprite` - This is the name of the sprite images for the unit. Conventionally this is the same as `name`, but if you want to test a new word and you didn't make a sprite yet, you can set this to an existing sprite. What sprites are needed depends on the `tiling` property. For the most common `tiling` mode, -1, you need three sprites. For example, if `sprite` is "text_dance" and `tiling` is -1, you need "text_dance_0_1.png", "text_dance_0_2.png" and "text_dance_0_3.png".
+
+`sprite_in_root` - If true, the sprites are loaded from Data/Sprites. If false, they are loaded from the Sprites directory in the active world. If you're using Lily's modloader, set this to false.
+
+`unittype` - Either "text" or "object".
+
+`tiling` - This determines how the sprites work. The options are:
+
+* -1 aka NONE. The unit always looks the same. Only 3 sprites are needed, for the wobble animation. Examples in vanilla are Rock and all text.
+* 0 aka DIRS. The unit has a different sprite for each facing direction. 12 sprites in total, 3 wobble frames for each direction. An example in vanilla is Skull.
+* 3 aka ANIM_DIRS. The unit has different sprites for each facing direction, and each of those directions has separate animation frames which are advanced each turn. Each of those animation frames in turn has three wobble frames. An example in vanilla is Belt.
+* 2 aka CHARACTER. For each facing direction, the unit has a five-frame walk cycle. Examples in vanilla are Baba, Keke and Me.
+* 1 aka TILED. The unit has different sprites depending on which adjacent tiles contain the same type of unit. An example in vanilla is Wall.
+
+The editor mentions a sixth mode called ANIM but none of the default units use it, so I don't know what its number is or how it works.
+
+`type` - For text units, this determines what "part of speech" the word is. The options are:
+
+* 0 - Noun. Examples are **baba**, **rock** and **wall**.
+* 1 - Hempuli calls this "linkityssana" which according to Google Translate means "Linking". I prefer to think of them as the verbs. Examples are **is**, **has** and **make**.
+* 2 - Hempuli calls these "verbs", I prefer to think of them as adjectives. Examples are **push**, **stop** and **you**.
+* 3 - Hempuli calls this "alkusana" which Google Translate says is "the first word". These are conditions which go before the noun. In vanilla the only one is **lonely**.
+* 4 - Not.
+* 5 - Letter. This is used in the ABC puzzles. You can create a unit named "text_a" and set its type to 5, and it will act as the letter A. Multi-letter tiles like **ba** and **ab** can be made by naming the unit "text_ba" or "text_ab".
+* 6 - And.
+* 7 - Hempuli calls this "ehtosana" which Google Translate says is "optional word". These are conditions which go after the noun and take parameters. Examples are **on**, **near** and **facing**.
+
+For certain mods you might need to add more text types.
+
+`operatortype` - For text type 2 this should be "verb" if the object can only take nouns in the third position like **has** and **make**, or "verb_all" if it can take type-2 as well like **is**. For type 3 this should be "cond_start". For type 7 this should be "cond_arg".
+
+`argextra` - This is supposed to allow type 7 to take words that aren't nouns as parameters, like **baba facing up is move**. I don't think it actually works, though.
+
+`colour` - Notice the European spelling. All the sprites are monochrome, this parameter gives the unit its colour. The values correspond to coordinates in the Data/Palettes images, but you can just copy one from a unit which is already the colour you want.
+
+`active` - For text, this is the colour which is used when the unit is part of a rule. Normally this a brighter version of `colour`.
+
+`tile` - This is an ID for the tile. It must be different from all of the vanilla `tile`s, otherwise the tile won't save properly. I prefer to use {0, 12}, {1, 12}, {2, 12} and so on.
+
+`grid` - This determines where the tile appears in the editor grid, column first. I prefer to use {11, 0}, {11, 1}, {11, 2} and so on.
+
+`layer` - This is the "z-index" of the tile, so that Baba always appears on top of Grass, for example. Text typically uses layer 20.
 
 ## Function Hooks
 When using Lily’s modloader, it might be possible to add your functionality without needing to entirely replace files, using the hook pattern. This means your mod is less likely to break if the game is patched. It’s also easier to compose hooks from multiple mods than it is to manually merge together code changes from multiple mods. Sometimes the changes you need to make are too deep inside the existing functions, though. Example:
