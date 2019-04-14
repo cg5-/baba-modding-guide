@@ -138,9 +138,11 @@ end
 ```
 
 ## Anatomy of a Turn
-A turn starts in `command` from syntax.lua, which is never called from any other lua code; presumably it's called directly from Multimedia Fusion. This just determines which button was pressed, and then calls `movecommand` to resolve the actual turn. You'll also notice some leftover code for a co-op mode which was never completed.
+A turn starts in `command` from syntax.lua, which is never called from any other lua code; presumably it's called directly from Multimedia Fusion. This just determines which button was pressed, and then calls `movecommand` to resolve most of the actual turn. You'll also notice some leftover code for a co-op mode which was never completed.
 
-`movecommand` contains all of the actual logic to resolve a turn. It starts with the infamously convoluted movement code, where most of the movement mechanics are resolved. Then it re-parses the rules if necessary. Then it resolves conversion rules (**noun is noun**). Then it re-parses rules again. Finally it calls `moveblock` which resolves the remaining mechanics. It also calls out to `MF_mapcursor` which presumably moves the cursor if it exists.
+`movecommand` contains most of the actual logic to resolve a turn. It starts with the infamously convoluted movement code, where most of the movement mechanics are resolved. Then it re-parses the rules if necessary. Then it resolves conversion rules (**noun is noun**). Then it re-parses rules again. Finally it calls `moveblock` which resolves the remaining mechanics. It also calls out to `MF_mapcursor` which presumably moves the cursor if it exists.
+
+There are some other functions which are never called in lua, like `fallblock`. Presumably these are also called by MMF.
 
 In many cases, units are not updated immediately. Instead they are queued up by `addaction` in update.lua and all executed at once in `doupdate`. This helps ensure that the order in which rules are processed does not affect the outcome.
 
