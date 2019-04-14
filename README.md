@@ -63,7 +63,52 @@ If you have a feature **rock is push** and another feature **rock is not push**,
 Conversion prevention rules like **baba is baba** cancel out other conversion rules like **baba is keke** in the same way.
 
 ### Querying Features
-You can test if a unit has a feature (say, if it **is dance**) using `hasfeature(getname(unit), "is", "dance", unitid)`. [Also mention the featureindex, and other ways to query for features.]
+You can test if a unit has a feature (say, if it **is dance**) using `hasfeature(getname(unit), "is", "dance", unitid)`. The entire list of features is found in the `features` array, and a useful and important structure is the `featureindex`, which typically looks something like this:
+
+```lua
+{
+  baba = {
+    { { "baba", "is", "you" }, {}, { { 2.0000001792937 }, { 2.0000001792964 }, { 2.0000001792991 } } }
+  },
+  box = {
+    { { "box", "is", "push" }, {}, { { 2.0000000826143 }, { 2.0000000826177 }, { 2.0000000826204 }, { 2.0000000826118 } } }
+  },
+  is = {
+    { { "text", "is", "push" }, {}, {} },
+    { { "level", "is", "stop" }, {}, {} },
+    { { "baba", "is", "you" }, {}, { { 2.0000001792937 }, { 2.0000001792964 }, { 2.0000001792991 } } },
+    { { "rock", "is", "push" }, {}, { { 2.0000001793022 }, { 2.0000000826177 }, { 2.0000000826204 }, { 2.0000000826118 } } },
+    { { "box", "is", "push" }, {}, { { 2.0000000826143 }, { 2.0000000826177 }, { 2.0000000826204 }, { 2.0000000826118 } } },
+    { { "rock", "is", "not you" }, {}, { { 2.0000001793022 }, { 2.000000179304 }, { 2.0000000826085 }, { 2.000000082603 } } }
+  },
+  level = {
+    { { "level", "is", "stop" }, {}, {} }
+  },
+  ["not you"] = {
+    { { "rock", "is", "not you" }, {}, { { 2.0000001793022 }, { 2.000000179304 }, { 2.0000000826085 }, { 2.000000082603 } }}
+  },
+  push = {
+    { { "text", "is", "push" }, {}, {} },
+    { { "rock", "is", "push" }, {}, { { 2.0000001793022 }, { 2.0000000826177 }, { 2.0000000826204 }, { 2.0000000826118 } } },
+    { { "box", "is", "push" }, {}, { { 2.0000000826143 }, { 2.0000000826177 }, { 2.0000000826204 }, { 2.0000000826118 } } }
+  },
+  rock = {
+    { { "rock", "is", "push" }, {}, { { 2.0000001793022 }, { 2.0000000826177 }, { 2.0000000826204 }, { 2.0000000826118 } } },
+    { { "rock", "is", "not you" }, {}, { { 2.0000001793022 }, { 2.000000179304 }, { 2.0000000826085 }, { 2.000000082603 } } }
+  },
+  stop = {
+    { { "level", "is", "stop" }, {}, {} }
+  },
+  text = {
+    { { "text", "is", "push" }, {}, {} }
+  },
+  you = {
+    { { "baba", "is", "you" }, {}, { { 2.0000001792937 }, { 2.0000001792964 }, { 2.0000001792991 } } }
+  }
+}
+```
+
+[Also mention other ways to query for features.]
 
 ## The Tiles List
 In values.lua there is a structure called the `tileslist` which defines the tiles which are available in the editor by default. You can add new unit types starting from `object120` so that you can place them in your levels. The simplest way to add a custom tile is to copy the most similar tile that already exists. Apparently going past `object125` or so causes problems. Here is what the fields in here mean:
