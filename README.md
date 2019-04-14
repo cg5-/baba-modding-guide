@@ -14,7 +14,7 @@ All in-game objects, both regular objects and text objects, are called units. Un
 
 The most useful properties of the unit structure are:
 
-`unit.values[XPOS], unit.values[YPOS]` - the coordinates of the tile the unit is currently on. For more details see the "coordinate system" section. These parameters should not be modified directly as this could break undo and the unitmap; instead use the `update` function found in tools.lua, or `addaction`, or some existing function which results in the values being updated.
+`unit.values[XPOS], unit.values[YPOS]` - the coordinates of the tile the unit is currently on. For more details see the "coordinate system" section. These parameters should not be modified directly as this could break undo and the `unitmap` structure; instead use the `update` function found in tools.lua, or `addaction`, or some existing function which results in the values being updated.
 
 `unit.values[DIR]` - a number from 0 to 3 giving the unit’s facing direction. 0 is right, 1 is up, 2 is left and 3 is down; 4 represents no movement, i.e. the wait command. A useful array is `ndirs` which is defined in values.lua:
 
@@ -32,6 +32,17 @@ local ox, oy = directionVector[1], directionVector[2]
 Now `<ox, oy>` is a unit vector pointing in the unit’s direction, and the tile in front of the unit is at `(unit.values[XPOS] + ox, unit.values[YPOS] + oy)`.
 
 `unit.strings[UNITNAME]` - this tells you what kind of unit it is. Text objects have "text_" in front of their name. Example values are "baba", "rock", "text_baba" and "text_is". When interacting with rules, it might be helpful to use `getname(unit)` instead, which returns "text" for all text objects.
+
+You can use the `unitmap` structure to find all the units on a given tile:
+
+```lua
+local units = unitmap[y * roomsizex + x]
+if units ~= nil then
+	for _, unitid in ipairs(units) do
+		-- ...
+	end
+end
+```
 
 ## Coordinate System
 The width and height of the current level are stored in `roomsizex` and `roomsizey`, and coordinates range from 0 to `roomsize<x|y> - 1`. However the playable area is surrounded by a 1-tile wide frame of "edge" tiles, so the actual playable area is `roomsizex - 2` tiles wide and `roomsizey - 2` tall. The playable area ranges from `(1,1)` to `(roomsizex - 2, roomsizey - 2)`. Increasing x moves to the right and increasing y moves down.
