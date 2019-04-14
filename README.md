@@ -51,18 +51,18 @@ Features have an array containing 0 or more conditions, which apply to the subje
 
 Features contain an array of arrays containing the unit IDs of the text objects which gave rise to it. I think the game uses these to highlight active rules and cross out rules which were cancelled out by **x is x** or rules involving **not**.
 
-## Default Features
+### Default Features
 There are always two features **text is push** and **level is stop**. These don't correspond to in-level rules, but they can be modified using **not**.
 
-## All, Group and Not X
+### All, Group and Not X
 A rule with **all** in the subject, like **all is push**, will, in addition to the `{"all", "is", "push"}` feature, generate one feature for each kind of object present in the level (not including text), like **baba is push**, **rock is push** and so on. **Group** and **Not X** work similarly. These additional features do not appear in the pause menu.
 
-## Not Cancelling and Conversion Prevention
+### Not Cancelling and Conversion Prevention
 If you have a feature **rock is push** and another feature **rock is not push**, `postrules` will add the special "never" condition to the first rule, effectively disabling it. If the **not** rule has a condition (e.g. **rock on tile is not push**), it is negated and added to the first rule (giving **rock not on tile is push**).
 
 Conversion prevention rules like **baba is baba** cancel out other conversion rules like **baba is keke** in the same way.
 
-## Querying Features
+### Querying Features
 You can test if a unit has a feature (say, if it **is dance**) using `hasfeature(getname(unit), "is", "dance", unitid)`. [Also mention the featureindex, and other ways to query for features.]
 
 ## The Tiles List
