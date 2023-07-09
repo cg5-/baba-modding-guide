@@ -1,5 +1,9 @@
 # Baba Modding Guide
 
+## Possibly out of date
+
+This guide might be out of date. Hempuli has made quite a few changes since I wrote this guide.
+
 ## Print Statements in Windows
 
 It’s much easier to tell what’s going on when you can print things to the console. In Windows however it's quite hard to actually see the text that is printed. Open PowerShell, `cd` to your Baba Is You directory and start Baba using `& '.\Baba Is You.exe' | echo` and you’ll be able to see them.
